@@ -34,10 +34,20 @@ async def login(request: User):
 @app.post("/user/entry")
 async def submit_entry(request: Entry):
     EntryService().add_or_update_entry(user_entry=request)
-
+    state = {'messages': []}
+    state['messages'].append(f"""Monitor user's emotional wellbeing and support their relationship.
+                A new entry was just submitted. Use your tools to:
+                - Gather ALL necessary information first.
+                - Decide if family notification is needed through an insightful message, giving tailored advice based on the context.
+                             
+                Entry:
+                    email - {request.email}
+                    date_selected - {request.date_selected}
+                    message - {request.message}""")
+    AgentService().graph.invoke(state)
     return {
         "message":
-        f"Entry for user {request.email} and entries '{request.message}'"
+        f"{state}"
     }
 
 
@@ -56,20 +66,20 @@ async def send_sms(request: LLMRequest):
     return {"message": "Success!!!"}
 
 
-@app.post("/entries/previous/days")
-async def get_previous_x_entries_days(days: int):
-    if days < 0:
-        return {"message": "Almost got me there!!!"}
-    entries = EntryService().get_entries_from_last_x_days(days=days)
-    return {"message": f"Here are the last {days} days: {entries}"}
+# @app.post("/entries/previous/days")
+# async def get_previous_x_entries_days(days: int):
+#     if days < 0:
+#         return {"message": "Almost got me there!!!"}
+#     entries = EntryService().get_entries_from_last_x_days(days=days)
+#     return {"message": f"Here are the last {days} days: {entries}"}
 
 
-@app.post("/entries/previous/amount")
-async def get_previous_x_entries_count(amount: int):
-    if amount < 0:
-        return {"message": "Almost got me there!!!"}
-    entries = EntryService().get_last_x_entries(amount=amount)
-    return {"message": f"Here are the last {amount} entries: {entries}"}
+# @app.post("/entries/previous/amount")
+# async def get_previous_x_entries_count(amount: int):
+#     if amount < 0:
+#         return {"message": "Almost got me there!!!"}
+#     entries = EntryService().get_last_x_entries(amount=amount)
+#     return {"message": f"Here are the last {amount} entries: {entries}"}
 
 
 @app.post("/llm/answer")
