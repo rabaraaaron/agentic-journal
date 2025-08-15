@@ -1,0 +1,67 @@
+name: agentic-journal
+# Extension fields for environment variables
+x-app: &app-env
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: agentic-journal
+  POSTGRES_DB: agentic-journal-db
+  POSTGRES_URL: agentic-journal-db1.czi4aaeue3cj.us-east-2.rds.amazonaws.com
+  POSTGRSE_PORT: 5432
+  LLM_URL: https://localhost:11434/api/generate
+  LLM_MODEL: gpt-oss
+services:
+  server:
+    platform: linux/amd64
+    container_name: agentic-server
+    build:
+      context: .
+      dockerfile: ./server/Dockerfile.server
+      target: dev-build
+    command: python -m uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - 8000:8000
+    environment:
+      <<: [*app-env]
+    volumes:
+      - ./server/src:/src/
+    networks:
+      - agentic-journal-net
+  web:
+    build:
+      context: .
+      dockerfile: ./client/Dockerfile.client
+      target: dev-build
+    container_name: agentic-client
+    ports:
+      - 3000:3000
+    volumes:
+      - ./client:/app
+      - /app/node_modules #Anonymous volume to persist Linux binaries instead of Windows
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    networks:
+      - agentic-journal-net
+  ollama:
+    build:
+      context: .
+      dockerfile: ollama/Dockerfile.ollama
+      target: dev-build
+    container_name: agentic-llm
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - 11434:11434
+    networks:
+      - agentic-journal-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  ollama:
+networks:
+  agentic-journal-net:
+    driver: bridge

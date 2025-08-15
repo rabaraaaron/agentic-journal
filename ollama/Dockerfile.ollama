@@ -1,0 +1,11 @@
+FROM ollama/ollama:0.11.4 AS dev-build
+
+# Add your certificates
+COPY ollama/ollama.crt /usr/local/share/ca-certificates/
+COPY certs/ZscalerRootCA.crt /usr/local/share/ca-certificates/ZscalerRootCA.crt
+
+# Expose Ollama API port
+EXPOSE 11434
+
+# # Default command to start Ollama server
+CMD ["serve"]

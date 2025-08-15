@@ -1,0 +1,15 @@
+FROM --platform=linux/amd64 node:24.5.0-alpine AS dev-build
+
+RUN apk update && apk add --no-cache ca-certificates
+
+WORKDIR /app
+
+# Copy package files first for better caching
+COPY client/package*.json ./
+RUN npm config set strict-ssl false && npm install
+
+# Copy the rest of the application
+COPY client/ ./
+
+EXPOSE 3000
+CMD ["npm", "start"]
