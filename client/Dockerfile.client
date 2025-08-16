@@ -1,15 +1,17 @@
-FROM --platform=linux/amd64 node:24.5.0-alpine AS dev-build
+FROM node:24.5.0 AS dev-build
 
-RUN apk update && apk add --no-cache ca-certificates
+USER root
 
-WORKDIR /app
+RUN apt-get update && apt-get install -y ca-certificates
 
 # Copy package files first for better caching
 COPY client/package*.json ./
-RUN npm config set strict-ssl false && npm install
+RUN npm config set strict-ssl false && npm install @mui/material @emotion/react @emotion/styled @mui/x-date-pickers dayjs
+
+WORKDIR /app
 
 # Copy the rest of the application
 COPY client/ ./
 
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]
