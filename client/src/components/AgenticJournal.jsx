@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
-import "./App.css";
-import MyContext from "./context";
+import "./AgenticJournal.css";
+import MyContext from "../context";
 
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -10,9 +10,10 @@ import TextField from "@mui/material/TextField";
 import Slider from "@mui/material/Slider";
 import Button from "@mui/material/Button";
 
-import MultiSelect from "./components/MultiSelect";
+import MultiSelect from "./MultiSelect";
+import MyAppBar from "./AppBar";
 
-function App() {
+function AgenticJournal() {
   const [muiDate, setMuiDate] = useState(dayjs(new Date()));
   const inputRef = useRef("");
   const [rating, setRating] = useState(10);
@@ -48,18 +49,24 @@ function App() {
     console.log("Rating: ", rating);
     console.log("Moods: ", moods);
     try {
-      const response = await fetch("http://server:8000/user/entry", {
-        method: "POST",
+      const response = await fetch("http://localhost:8000/health", {
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          date_selected: muiDate.format("YYYY-MM-DD"),
-          message: message,
-          moods: moods,
-          email: "rabara777@outlook.com",
-        }),
       });
+      // const response = await fetch("http://server:8000/user/entry", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     date_selected: muiDate.format("YYYY-MM-DD"),
+      //     message: message,
+      //     moods: moods,
+      //     email: "rabara777@outlook.com",
+      //   }),
+      // });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -79,6 +86,9 @@ function App() {
     <MyContext.Provider value={{ moods, setMoods }}>
       <div className="top-div">
         <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <div className="full-width-container">
+            <MyAppBar />
+          </div>
           <h1 className="title">Tell Me How You Really Feel</h1>
           <DatePicker value={muiDate} onChange={handleMuiDateChange} />
           <div className="width-container">
@@ -135,4 +145,4 @@ function App() {
   );
 }
 
-export default App;
+export default AgenticJournal;

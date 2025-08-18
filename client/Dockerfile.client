@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y ca-certificates
 
 # Copy package files first for better caching
 COPY client/package*.json ./
-RUN npm config set strict-ssl false && npm install @mui/material @emotion/react @emotion/styled @mui/x-date-pickers dayjs
+RUN npm config set strict-ssl false && npm install @mui/material @emotion/react @emotion/styled @mui/x-date-pickers dayjs @mui/icons-material
 
 WORKDIR /app
 

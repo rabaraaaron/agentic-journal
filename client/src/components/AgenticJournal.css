@@ -4,6 +4,7 @@
   min-height: 100vh;
   align-items: center;
   min-width: 100vw;
+  background-color: #f2f5f7;
 }
 
 .title {
@@ -13,6 +14,10 @@
 .width-container {
   min-width: 70vw;
   margin: 10px 0px 10px 0px;
+}
+
+.full-width-container {
+  min-width: 100vw;+
 }
 
 .horizontal {
