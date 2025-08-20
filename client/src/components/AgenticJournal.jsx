@@ -11,7 +11,6 @@ import Slider from "@mui/material/Slider";
 import Button from "@mui/material/Button";
 
 import MultiSelect from "./MultiSelect";
-import MyAppBar from "./AppBar";
 
 function AgenticJournal() {
   const [muiDate, setMuiDate] = useState(dayjs(new Date()));
@@ -84,63 +83,58 @@ function AgenticJournal() {
 
   return (
     <MyContext.Provider value={{ moods, setMoods }}>
-      <div className="top-div">
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <div className="full-width-container">
-            <MyAppBar />
-          </div>
-          <h1 className="title">Tell Me How You Really Feel</h1>
-          <DatePicker value={muiDate} onChange={handleMuiDateChange} />
-          <div className="width-container">
-            <TextField
-              id="fullWidth"
-              label="Message"
-              multiline
-              rows={4}
-              defaultValue=""
-              inputRef={inputRef}
-              fullWidth
-            />
-          </div>
-          <div className="width-container horizontal">
-            <p className="mood-label">Mood: </p>
-            <Slider
-              aria-label="Mood Rating"
-              defaultValue={10}
-              valueLabelDisplay="auto"
-              shiftStep={1}
-              step={1}
-              min={1}
-              max={10}
-              value={rating}
-              onChange={handleRatingChange}
-            />
-          </div>
-          <div className="width-container row">
-            <MultiSelect handleChange={handleMoodsChanged} />
-          </div>
-          <div className="width-container row">
-            <Button
-              className="my-button"
-              variant="contained"
-              color="success"
-              style={{ margin: "0px 10px 0px 10px" }}
-              onClick={handleSubmit}
-            >
-              Submit
-            </Button>
-            <Button
-              className="my-button"
-              variant="outlined"
-              color="error"
-              style={{ margin: "0px 10px 0px 10px" }}
-              onClick={handleClearAll}
-            >
-              Clear
-            </Button>
-          </div>
-        </LocalizationProvider>
-      </div>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <h1 className="title">Tell Me How You Really Feel</h1>
+        <DatePicker value={muiDate} onChange={handleMuiDateChange} />
+        <div className="width-container">
+          <TextField
+            id="fullWidth"
+            label="Message"
+            multiline
+            rows={4}
+            defaultValue=""
+            inputRef={inputRef}
+            fullWidth
+          />
+        </div>
+        <div className="width-container horizontal">
+          <p className="mood-label">Mood: </p>
+          <Slider
+            aria-label="Mood Rating"
+            defaultValue={10}
+            valueLabelDisplay="auto"
+            shiftStep={1}
+            step={1}
+            min={1}
+            max={10}
+            value={rating}
+            onChange={handleRatingChange}
+          />
+        </div>
+        <div className="width-container row">
+          <MultiSelect handleChange={handleMoodsChanged} />
+        </div>
+        <div className="width-container row">
+          <Button
+            className="my-button"
+            variant="contained"
+            color="success"
+            style={{ margin: "0px 10px 0px 10px" }}
+            onClick={handleSubmit}
+          >
+            Submit
+          </Button>
+          <Button
+            className="my-button"
+            variant="outlined"
+            color="error"
+            style={{ margin: "0px 10px 0px 10px" }}
+            onClick={handleClearAll}
+          >
+            Clear
+          </Button>
+        </div>
+      </LocalizationProvider>
     </MyContext.Provider>
   );
 }

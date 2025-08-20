@@ -34,6 +34,7 @@ class EntryService:
             moods=[
                 Mood(mood).value for mood in user_entry.moods if Mood(mood)
             ],
+            ratings=[user_entry.rating],
             email=user_entry.email
         )
         session.add(new_entry)
@@ -51,6 +52,8 @@ class EntryService:
         ]
         all_moods_set = set(all_moods_string)
         queried_entry.moods = list(all_moods_set)
+
+        queried_entry.ratings.append(user_entry.rating)
 
     @tool
     def get_entries_from_last_x_days(days: int, email: str) -> list[SQLAlchemyEntry] | None:

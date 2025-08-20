@@ -8,9 +8,28 @@ from service.message_service import MessageService
 from service.user_service import UserService
 from service.entry_service import EntryService
 from service.agent_service import AgentService
+from fastapi.middleware.cors import CORSMiddleware
 
+
+origins = [
+    "http://localhost:3000",
+    "https://agenticjournal.com",
+]
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/health")
+async def health():
+    return {"message": "Hello world!!!"}
 
 
 @app.post("/user/create")

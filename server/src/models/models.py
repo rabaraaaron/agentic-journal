@@ -19,6 +19,7 @@ class Entry(BaseModel):
         default=date.today())
     message: str = Field(min_length=1, max_length=300, default="")
     moods: list[Mood] = Field(default_factory=list)
+    rating: int = Field(default=5)
     email: str = Field(min_length=1, max_length=30)
 
 
