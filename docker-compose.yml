@@ -7,7 +7,7 @@ x-server: &server-env
   POSTGRES_URL: agentic-journal-db1.czi4aaeue3cj.us-east-2.rds.amazonaws.com
   POSTGRSE_PORT: 5432
   LLM_URL: https://localhost:11434/api/generate
-  LLM_MODEL: gpt-oss
+  LLM_MODEL: qwen2.5:7B
   SUPER_SECRET: LongLiveLunaAndKhonsu!!!
   HASHING_ALGO: HS256
   SALT: tooMuchSaltWillKillYou!!!
