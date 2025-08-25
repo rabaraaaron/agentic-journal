@@ -24,19 +24,16 @@ class AgentService:
     def __init__(self):
         self.entry_service = EntryService
         self.message_service = MessageService
+        self.list_of_tools = [
+            self.entry_service.get_entries_from_last_x_days,
+            self.entry_service.get_last_x_entries,
+            self.message_service.send_text
+        ]
         self.llm_with_tools = LLMService().llm.bind_tools(
-            [
-                self.entry_service.get_entries_from_last_x_days,
-                self.entry_service.get_last_x_entries,
-                self.message_service.send_text
-            ]
+            self.list_of_tools
         )
         self.tool_node = ToolNode(
-            [
-                self.entry_service.get_entries_from_last_x_days,
-                self.entry_service.get_last_x_entries,
-                self.message_service.send_text
-            ]
+            self.list_of_tools
         )
         self.graph_builder = StateGraph(ChatState)
         self.graph_builder.add_node('llm', self.llm_node)

@@ -1,6 +1,6 @@
 name: agentic-journal
 # Extension fields for environment variables
-x-app: &app-env
+x-server: &server-env
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: agentic-journal
   POSTGRES_DB: agentic-journal-db
@@ -8,6 +8,14 @@ x-app: &app-env
   POSTGRSE_PORT: 5432
   LLM_URL: https://localhost:11434/api/generate
   LLM_MODEL: gpt-oss
+  SUPER_SECRET: LongLiveLunaAndKhonsu!!!
+  HASHING_ALGO: HS256
+  SALT: tooMuchSaltWillKillYou!!!
+  PROD_CLIENT_URL: REPLACEME
+  OLLAMA_URL: http://ollama:11434
+x-client: &client-env
+  VITE_SERVER_BASE_URL: http://localhost:8000
+  CHOKIDAR_USEPOLLING: true
 services:
   server:
     platform: linux/amd64
@@ -20,7 +28,7 @@ services:
     ports:
       - 8000:8000
     environment:
-      <<: [*app-env]
+      <<: [*server-env]
     volumes:
       - ./server/src:/src/
     networks:
@@ -37,7 +45,7 @@ services:
       - ./client:/app
       - /app/node_modules #Anonymous volume to persist Linux binaries instead of Windows
     environment:
-      - CHOKIDAR_USEPOLLING=true
+      <<: [*client-env]
     networks:
       - agentic-journal-net
   ollama:

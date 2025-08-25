@@ -1,31 +1,40 @@
-from twilio.rest import Client
+import urllib3
+from discord_webhook import DiscordWebhook
+import requests
 from langchain_core.tools import tool
+
+
+# Disable SSL warnings
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# Monkey patch the requests session to disable SSL verification
+original_request = requests.Session.request
+
+
+def patched_request(self, *args, **kwargs):
+    kwargs['verify'] = False
+    return original_request(self, *args, **kwargs)
 
 
 class MessageService:
 
-    def __init__(self):
-        self.account_sid = "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        self.auth_token = "your_auth_token"
-        self.client = Client(self.account_sid, self.auth_token)
-
-    def text_number(self, number: str, message: str):
-        return f"This number {number} was texted with this message: {message}"
-
     @tool
     def send_text(message: str):
-        """Sends a text message to family including the message that includes insight to help support the relationship.
+        """Sends a text message to the discord group
 
         Args:
             messge (str): The message that will be texted, which includes support for the relationship.
         """
         print("send_text tool called!!!")
+        requests.Session.request = patched_request
 
-        # message = self.client.messages.create(
-        #     to="+12533679887",
-        #     from_="+18559709611",
-        #     body=message,
-        # )
+        url = "https://discord.com/api/webhooks/1407781995479699566/SuoE8dHgtbGSGKp1pXo1FiDdOgDjr4QysMaRLpGkN2yYDEygw_ZxmC059VV-WneBLP00"
+        webhook = DiscordWebhook(url=url, content=message)
+        response = webhook.execute()
 
-        print("Text sent!")
+        if response.status_code == 200:
+            print("Message sent successfully!")
+        else:
+            print(f"Failed to send message: {response.status_code}")
+
         return message

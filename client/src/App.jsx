@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import AgenticJournal from "./components/AgenticJournal";
 import SignUp from "./components/sign-up/SignUp";
+import Login from "./components/sign-in/SignIn";
 import MyAppBar from "./components/MyAppBar";
 
 import "./App.css";
@@ -13,20 +14,35 @@ function Insight() {
   return <h1>Insight Page</h1>;
 }
 
-export default function App() {
+function AppContent() {
+  const location = useLocation();
+  const signupOrSignin = ["/signup", "/login"];
   return (
-    <BrowserRouter>
-      <div className="appbar">
-        <MyAppBar />
-      </div>
+    <>
+      {!signupOrSignin.includes(location.pathname) && (
+        <div className="appbar">
+          <MyAppBar />
+        </div>
+      )}
+
       <div className="main-body">
         <Routes>
           <Route path="/" element={<AgenticJournal />} />
+          <Route path="/home" element={<AgenticJournal />} />
           <Route path="/about" element={<About />} />
           <Route path="/insight" element={<Insight />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </div>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }

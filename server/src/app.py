@@ -1,19 +1,22 @@
-import time
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, HTTPException, status, Depends
+from fastapi.responses import JSONResponse
+import jwt
 import uvicorn
-import schedule
 
 from models.models import Entry, LLMRequest, User
-from service.message_service import MessageService
 from service.user_service import UserService
 from service.entry_service import EntryService
 from service.agent_service import AgentService
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from langchain_core.messages import HumanMessage
 
 
 origins = [
     "http://localhost:3000",
     "https://agenticjournal.com",
+    os.getenv("PROD_CLIENT_URL", None)
 ]
 
 app = FastAPI()
@@ -24,91 +27,108 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Authorization"],
 )
+
+security = HTTPBearer()
+
+
+def verify_jwt_token(token: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """Verify JWT token and return payload"""
+    try:
+        payload = jwt.decode(token.credentials, os.getenv("SUPER_SECRET", "NO_SECRET"), algorithms=[
+                             os.getenv("HASHING_ALGO", "HS256")])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired"
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
+
+
+@app.exception_handler(jwt.ExpiredSignatureError)
+async def expired_token_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=401,
+        content={"detail": "Token has expired",
+                 "custom_field": "additional_info"}
+    )
+
+
+@app.exception_handler(jwt.InvalidTokenError)
+async def invalid_token_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=401,
+        content={"detail": "Invalid token", "custom_field": "additional_info"}
+    )
 
 
 @app.get("/health")
 async def health():
-    return {"message": "Hello world!!!"}
+    return JSONResponse(content={"detail": "Hello world!!!"})
 
 
 @app.post("/user/create")
 async def create_user(request: User):
-    success = UserService().create_user(user=request)
-    return {
-        "message":
-        f"User {request.username} successfully created." if success else f"User {request.username} failed to create."
-    }
+    status = UserService().create_user(user=request)
+    response = JSONResponse(content={
+                            "detail": f"Your signup attempt was {"successful" if status else "denied. Someone already has that email."}."}, status_code=status)
+    if status == 200:
+        token = UserService().login(user=request)
+        response.headers["Authorization"] = f"Bearer {token}"
+
+    return response
 
 
 @app.post("/user/login")
 async def login(request: User):
-    success = UserService().login(user=request)
-    return {
-        "message":
-        f"Your login attempt was {"successful" if success else "denied"}."
-    }
+    token = UserService().login(user=request)
+    if isinstance(token, int):
+        return JSONResponse(content={"detail": f"Your login attempt was denied due to incorrect {"email" if token == 1 else "password"}."}, status_code=400)
+    response = JSONResponse(
+        content={"detail": f"Your login attempt was successful."})
+    response.headers["Authorization"] = f"Bearer {token}"
+    return response
+
+
+@app.post("/user/verify")
+async def verify(current_user: dict = Depends(verify_jwt_token)):
+    return JSONResponse(content="Success", status_code=200)
 
 
 @app.post("/user/entry")
-async def submit_entry(request: Entry):
-    EntryService().add_or_update_entry(user_entry=request)
-    state = {'messages': []}
-    state['messages'].append(f"""Monitor user's emotional wellbeing and support their relationship.
-                A new entry was just submitted. Use your tools to:
+async def submit_entry(entry: Entry, current_user: dict = Depends(verify_jwt_token)):
+    EntryService().add_or_update_entry(user_entry=entry,
+                                       email=current_user.get("email", "No email"))
+    state = {
+        'messages': [HumanMessage(content=f"""Monitor user's emotional wellbeing and support their relationship.
+                A new entry was just submitted. Address users by email. Use your tools to:
                 - Gather ALL necessary information first.
-                - Decide if family notification is needed through an insightful message, giving tailored advice based on the context.
-                             
+                - Notify the discord, only once, with how the user is feeling.
+
                 Entry:
-                    email - {request.email}
-                    date_selected - {request.date_selected}
-                    message - {request.message}""")
-    AgentService().graph.invoke(state)
-    return {
-        "message":
-        f"{state}"
+                    email - {current_user.get("email", "No email")}
+                    date_selected - {entry.date_selected}
+                    message - {entry.message}""")]
     }
+    AgentService().graph.invoke(state)
+    return JSONResponse(content={"detail": "Thank you for your submission!"})
 
 
 @app.get("/{user_id}/entries")
 async def user_entries(user_id: str):
-    return {
-        "message":
-        f"A request to see a user's entries submitted for user {user_id}"
-    }
-
-
-@app.post("/entries/send_sms")
-async def send_sms(request: LLMRequest):
-    MessageService().send_email_to_sms(to_number="2533679887@txt.att.net",
-                                       message=request.prompt)
-    return {"message": "Success!!!"}
-
-
-# @app.post("/entries/previous/days")
-# async def get_previous_x_entries_days(days: int):
-#     if days < 0:
-#         return {"message": "Almost got me there!!!"}
-#     entries = EntryService().get_entries_from_last_x_days(days=days)
-#     return {"message": f"Here are the last {days} days: {entries}"}
-
-
-# @app.post("/entries/previous/amount")
-# async def get_previous_x_entries_count(amount: int):
-#     if amount < 0:
-#         return {"message": "Almost got me there!!!"}
-#     entries = EntryService().get_last_x_entries(amount=amount)
-#     return {"message": f"Here are the last {amount} entries: {entries}"}
+    return JSONResponse(content={"detail": f"A request to see a user's entries submitted for user {user_id}"})
 
 
 @app.post("/llm/answer")
 async def llm_answer(request: LLMRequest):
     response = AgentService().run(prompt=request.prompt)
-    return {"message": response}
+    return JSONResponse(content={"detail": response})
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-def print_it():
-    print("Oh yea print it!!!")

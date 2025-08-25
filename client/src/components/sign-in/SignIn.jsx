@@ -59,14 +59,12 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
-export default function SignUp(props) {
+export default function Login(props) {
   const navigate = useNavigate();
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
-  const [usernameError, setUsernameError] = React.useState(false);
-  const [usernameErrorMessage, setUsernameErrorMessage] = React.useState("");
   const [responseData, setResponseData] = useState(null); // State to store the fetched data
   const [loading, setLoading] = useState(false); // State to indicate loading status
   const [error, setError] = useState(null); // State to store any errors
@@ -74,7 +72,6 @@ export default function SignUp(props) {
   const validateInputs = () => {
     const email = document.getElementById("email");
     const password = document.getElementById("password");
-    const username = document.getElementById("username");
 
     let isValid = true;
 
@@ -96,26 +93,17 @@ export default function SignUp(props) {
       setPasswordErrorMessage("");
     }
 
-    if (!username.value || username.value.length < 1) {
-      setUsernameError(true);
-      setUsernameErrorMessage("Username is required.");
-      isValid = false;
-    } else {
-      setUsernameError(false);
-      setUsernameErrorMessage("");
-    }
-
     return isValid;
   };
 
   const handleSubmit = async (event) => {
-    if (usernameError || emailError || passwordError) {
+    if (emailError || passwordError) {
       event.preventDefault();
       return;
     }
     const data = new FormData(event.currentTarget);
     console.log({
-      username: data.get("username"),
+      name: data.get("name"),
       lastName: data.get("lastName"),
       email: data.get("email"),
       password: data.get("password"),
@@ -123,19 +111,17 @@ export default function SignUp(props) {
 
     try {
       setLoading(true);
+      console.log(import.meta.env.VITE_SERVER_BASE_URL);
       const response = await fetch(
-        import.meta.env.VITE_SERVER_BASE_URL + "/user/create",
+        import.meta.env.VITE_SERVER_BASE_URL + "/user/login",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            username: data.get("username"),
             email: data.get("email"),
             password: data.get("password"),
-            discord_webhook_url:
-              "https://discord.com/api/webhooks/1407781995479699566/SuoE8dHgtbGSGKp1pXo1FiDdOgDjr4QysMaRLpGkN2yYDEygw_ZxmC059VV-WneBLP00",
           }),
         }
       );
@@ -190,27 +176,13 @@ export default function SignUp(props) {
                 variant="h4"
                 sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}
               >
-                Sign up
+                Login
               </Typography>
               <Box
                 component="form"
                 onSubmit={handleSubmit}
                 sx={{ display: "flex", flexDirection: "column", gap: 2 }}
               >
-                <FormControl>
-                  <FormLabel htmlFor="username">Username</FormLabel>
-                  <TextField
-                    autoComplete="username"
-                    name="username"
-                    required
-                    fullWidth
-                    id="username"
-                    placeholder="Litcharon"
-                    error={usernameError}
-                    helperText={usernameErrorMessage}
-                    color={usernameError ? "error" : "primary"}
-                  />
-                </FormControl>
                 <FormControl>
                   <FormLabel htmlFor="email">Email</FormLabel>
                   <TextField
@@ -248,7 +220,7 @@ export default function SignUp(props) {
                   variant="contained"
                   onClick={validateInputs}
                 >
-                  Sign up
+                  Login
                 </Button>
               </Box>
               <Divider>
@@ -256,16 +228,16 @@ export default function SignUp(props) {
               </Divider>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <Typography sx={{ textAlign: "center" }}>
-                  Already have an account?{" "}
+                  Don&apos;t have an account?{" "}
                   <Button
                     type="submit"
                     fullWidth
                     variant="contained"
                     onClick={() => {
-                      navigate("/login");
+                      navigate("/signup");
                     }}
                   >
-                    Login
+                    Sign Up
                   </Button>
                 </Typography>
               </Box>

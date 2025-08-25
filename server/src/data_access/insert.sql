@@ -1,9 +1,9 @@
 -- Insert sample data for users and entries tables
 
 -- Insert users
-INSERT INTO users (email, password, username) VALUES
-('rabara777@outlook.com', 'password123', 'rabara777'),
-('melissanicole27@hotmail.com', 'password456', 'melissanicole');
+INSERT INTO users (email, password, username, discord_webhook_url) VALUES
+('rabara777@outlook.com', 'password123', 'rabara777', 'https://discord.com/api/webhooks/1407781995479699566/SuoE8dHgtbGSGKp1pXo1FiDdOgDjr4QysMaRLpGkN2yYDEygw_ZxmC059VV-WneBLP00'),
+('melissanicole27@hotmail.com', 'password456', 'melissanicole', 'https://discord.com/api/webhooks/1407781995479699566/SuoE8dHgtbGSGKp1pXo1FiDdOgDjr4QysMaRLpGkN2yYDEygw_ZxmC059VV-WneBLP00');
 
 -- Insert sample entries for rabara777@outlook.com
 INSERT INTO entries (

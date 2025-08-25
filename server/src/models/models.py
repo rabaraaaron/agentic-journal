@@ -8,8 +8,9 @@ from models.moods import Mood
 
 class User(BaseModel):
     email: str = Field(min_length=5, max_length=30)
-    password: str = Field(min_length=5, max_length=20)
+    password: str = Field(min_length=5)
     username: str = Optional[str]
+    discord_webhook_url: str = Optional[str]
 
 
 class Entry(BaseModel):
@@ -20,7 +21,6 @@ class Entry(BaseModel):
     message: str = Field(min_length=1, max_length=300, default="")
     moods: list[Mood] = Field(default_factory=list)
     rating: int = Field(default=5)
-    email: str = Field(min_length=1, max_length=30)
 
 
 class LLMRequest(BaseModel):

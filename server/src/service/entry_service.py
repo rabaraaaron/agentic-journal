@@ -11,23 +11,23 @@ from data_access.pg_client import PGClient
 
 from models.models import Mood
 
+llm = LLMService().llm
+
 
 class EntryService:
 
-    def __init__(self):
-        self.llm = LLMService().llm
-
-    def add_or_update_entry(self, user_entry: PydanticEntry) -> None:
+    def add_or_update_entry(self, user_entry: PydanticEntry, email: str) -> None:
         with PGClient.get_session() as session:
             queried_entry: SQLAlchemyEntry | None = session.query(
-                SQLAlchemyEntry).filter(SQLAlchemyEntry.date_selected == user_entry.date_selected and SQLAlchemyEntry.email == user_entry.email).first()
+                SQLAlchemyEntry).filter(SQLAlchemyEntry.date_selected == user_entry.date_selected and SQLAlchemyEntry.email == email).first()
             if queried_entry:
                 self.update_entry(user_entry=user_entry,
                                   queried_entry=queried_entry)
             else:
-                self.add_entry(user_entry=user_entry, session=session)
+                self.add_entry(user_entry=user_entry,
+                               email=email, session=session)
 
-    def add_entry(self, user_entry: PydanticEntry, session: Session) -> None:
+    def add_entry(self, user_entry: PydanticEntry, email: str, session: Session) -> None:
         new_entry = SQLAlchemyEntry(
             date_selected=user_entry.date_selected,
             messages=[user_entry.message],
@@ -35,7 +35,7 @@ class EntryService:
                 Mood(mood).value for mood in user_entry.moods if Mood(mood)
             ],
             ratings=[user_entry.rating],
-            email=user_entry.email
+            email=email
         )
         session.add(new_entry)
 
@@ -68,13 +68,20 @@ class EntryService:
         with PGClient.get_session() as session:
             queried_entries: list[SQLAlchemyEntry] | None = session.query(
                 SQLAlchemyEntry).filter(SQLAlchemyEntry.date_selected >= date_from_x_days_ago).filter(SQLAlchemyEntry.email == email).limit(10).all()
+            converted_entries = [
+                messages.__dict__.get("messages") for messages in queried_entries]
+            print(f"CONVERTED ENTRIES: {converted_entries}")
         messages = [
             SystemMessage(
                 content=f"""You are a relationship couselor. Synthesize the following 
-                entries to derive insight for the user's relationship. {queried_entries.__str__()}"""
+                list of entries to derive insight for the user's relationship. Each entry
+                in this array counts as a single day, where there can be multiple messages
+                in a single day.
+                
+                {converted_entries}"""
             )
         ]
-        return self.llm.invoke(messages).content
+        return llm.invoke(messages).content
 
     @tool
     def get_last_x_entries(amount: int, email: str) -> list[SQLAlchemyEntry]:
@@ -88,10 +95,19 @@ class EntryService:
         with PGClient.get_session() as session:
             queried_entries: list[SQLAlchemyEntry] | None = session.query(
                 SQLAlchemyEntry).filter(SQLAlchemyEntry.email == email).order_by(SQLAlchemyEntry.date_selected.desc()).limit(amount).all()
+            converted_entries = [
+                messages.__dict__.get("messages") for messages in queried_entries]
+            print(f"CONVERTED ENTRIES: {converted_entries}")
         messages = [
             SystemMessage(
-                content=f"""You are a relationship couselor. Synthesize the following 
-                entries to derive insight for the user's relationship. {queried_entries.__str__()}"""
+                content=f"""You are an advisor to a relationship. Synthesize the following 
+                list of entries to derive insight for the user's emotions so that you can
+                give curated advice to the other individual. Each entry
+                in this array counts as a single day, where there can be multiple messages
+                in a single day. Entries are submitted by the user only, so the significant other's
+                thoughts are not included in these messages.
+                
+                {converted_entries}"""
             )
         ]
-        return self.llm.invoke(messages).content
+        return llm.invoke(messages).content

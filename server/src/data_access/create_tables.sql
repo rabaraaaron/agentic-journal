@@ -1,7 +1,8 @@
 CREATE TABLE users (
 	email VARCHAR(30) PRIMARY KEY,
-	password VARCHAR(30) NOT NULL,
-	username VARCHAR(30) NOT NULL
+	password VARCHAR NOT NULL,
+	username VARCHAR(30) NOT NULL,
+	discord_webhook_url VARCHAR NOT NULL
 );
 CREATE TABLE entries (
 	id SERIAL PRIMARY KEY,

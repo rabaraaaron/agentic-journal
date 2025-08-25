@@ -14,17 +14,49 @@ import MenuItem from "@mui/material/MenuItem";
 import AdbIcon from "@mui/icons-material/Adb";
 import { useNavigate } from "react-router-dom";
 
-const pages = ["About", "Insight", "SignUp"]; //Needs to match Route path in App.jsx
-const settings = ["Profile", "Account", "Logout"];
+const pages = ["Home", "About", "Insight"]; //Needs to match Route path in App.jsx
 
-function ResponsiveAppBar() {
+function MyAppBar() {
   const navigate = useNavigate();
+
+  const settings = [
+    {
+      name: "Account",
+      clickAction: function () {
+        console.log("Clicked Account button");
+      },
+    },
+    {
+      name: "Logout",
+      clickAction: function () {
+        localStorage.removeItem("token");
+        navigate("/login");
+      },
+    },
+  ];
+
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
+
+  const isAuthenticated = async () => {
+    const response = await fetch(
+      import.meta.env.VITE_SERVER_BASE_URL + "/user/verify",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+        body: JSON.stringify({}),
+      }
+    );
+    return response.status === 200;
+  };
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
   };
+
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
   };
@@ -37,6 +69,14 @@ function ResponsiveAppBar() {
     setAnchorElUser(null);
   };
 
+  const handleNavigate = (path) => {
+    if (!isAuthenticated()) {
+      navigate("/login");
+      return;
+    }
+    navigate(path);
+  };
+
   return (
     <AppBar position="static">
       <Container maxWidth="xl">
@@ -46,7 +86,6 @@ function ResponsiveAppBar() {
             variant="h6"
             noWrap
             component="a"
-            href="#app-bar-with-responsive-menu"
             sx={{
               mr: 2,
               display: { xs: "none", md: "flex" },
@@ -55,9 +94,10 @@ function ResponsiveAppBar() {
               letterSpacing: ".3rem",
               color: "inherit",
               textDecoration: "none",
+              cursor: "pointer",
             }}
             onClick={() => {
-              navigate("/");
+              handleNavigate("/");
             }}
           >
             LOGO
@@ -91,18 +131,24 @@ function ResponsiveAppBar() {
               sx={{ display: { xs: "block", md: "none" } }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
+                <MenuItem
+                  key={page}
+                  onClick={() => {
+                    handleCloseNavMenu();
+                    handleNavigate("/" + page.toLowerCase()); // ✅ Fixed: consistent lowercase routing
+                  }}
+                >
                   <Typography sx={{ textAlign: "center" }}>{page}</Typography>
                 </MenuItem>
               ))}
             </Menu>
           </Box>
+
           <AdbIcon sx={{ display: { xs: "flex", md: "none" }, mr: 1 }} />
           <Typography
             variant="h5"
             noWrap
             component="a"
-            href="#app-bar-with-responsive-menu"
             sx={{
               mr: 2,
               display: { xs: "flex", md: "none" },
@@ -112,17 +158,22 @@ function ResponsiveAppBar() {
               letterSpacing: ".3rem",
               color: "inherit",
               textDecoration: "none",
+              cursor: "pointer", // ✅ Added cursor pointer
+            }}
+            onClick={() => {
+              handleNavigate("/"); // ✅ Simplified navigation logic
             }}
           >
             LOGO
           </Typography>
+
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
             {pages.map((page) => (
               <Button
                 key={page}
                 onClick={() => {
                   handleCloseNavMenu();
-                  navigate("/" + page.toLowerCase());
+                  handleNavigate("/" + page.toLowerCase());
                 }}
                 sx={{ my: 2, color: "white", display: "block" }}
               >
@@ -130,15 +181,16 @@ function ResponsiveAppBar() {
               </Button>
             ))}
           </Box>
+
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                <Avatar alt="User Avatar" src="/static/images/avatar/2.jpg" />
               </IconButton>
             </Tooltip>
             <Menu
               sx={{ mt: "45px" }}
-              id="menu-appbar"
+              id="menu-appbar-user"
               anchorEl={anchorElUser}
               anchorOrigin={{
                 vertical: "top",
@@ -153,9 +205,15 @@ function ResponsiveAppBar() {
               onClose={handleCloseUserMenu}
             >
               {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                <MenuItem
+                  key={setting.name}
+                  onClick={() => {
+                    handleCloseUserMenu();
+                    setting.clickAction();
+                  }}
+                >
                   <Typography sx={{ textAlign: "center" }}>
-                    {setting}
+                    {setting.name}{" "}
                   </Typography>
                 </MenuItem>
               ))}
@@ -166,4 +224,5 @@ function ResponsiveAppBar() {
     </AppBar>
   );
 }
-export default ResponsiveAppBar;
+
+export default MyAppBar;

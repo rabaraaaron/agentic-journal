@@ -14,6 +14,7 @@ class User(Base):
     email = mapped_column(String, primary_key=True)
     password = mapped_column(String)
     username = mapped_column(String)
+    discord_webhook_url = mapped_column(String)
 
 
 class Entry(Base):
