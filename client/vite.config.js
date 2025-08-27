@@ -7,7 +7,8 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 3000,
     watch: {
-      usePolling: true, // Important for Docker on Windows
+      usePolling: true,
     },
+    allowedHosts: ["frontend_web", "tell-me-how-you-really-feel.com"],
   },
 });

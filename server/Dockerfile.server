@@ -5,4 +5,4 @@ COPY server/requirements.txt ./requirements.txt
 COPY server/src /src/
 RUN UV_HTTP_TIMEOUT=3000 pip3 install uv && uv pip install --system -r requirements.txt
 WORKDIR /src/
-# ENTRYPOINT ["tail", "-f", "/dev/null"]
+CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
